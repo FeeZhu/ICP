@@ -2,7 +2,6 @@
 /******************************************************
 ICP算法的cpu实现，实现最原始的icp算法
 并行部分自己调用OpenMP实现
-
 ********************************************************/
 #include "icp.h"
 
@@ -17,10 +16,11 @@ int main()
 	// 创建滤波对象
 	pcl::VoxelGrid<pcl::PointXYZ> filter;
 	filter.setInputCloud(cloud_in);
-	// 设置体素栅格的大小为 1x1x1cm
+	// 设置体素栅格的大小为 1x1x1c
 	filter.setLeafSize(0.01f, 0.01f, 0.01f);
 	filter.filter(*cloud_in);
-	pcl::io::savePLYFileASCII("bunnys.ply", *cloud_in);
+	cout << "点云大小:" << cloud_in->size() << endl;
+	pcl::io::savePLYFileASCII("bunny1.ply", *cloud_in);
 
 	// Defining a rotation matrix and translation vector
 	Eigen::Matrix4d transformation_matrix = Eigen::Matrix4d::Identity();

@@ -41,7 +41,7 @@ double FindClosest(const Eigen::MatrixXd  cloud_target,
 	double error = 0.0;
 	int *Index = new int[cloud_target.cols()];
 	//时间复杂度爆炸,需要使用kd-tree这种结构
-#pragma omp parallel for
+//#pragma omp parallel for
 	for (int i = 0; i < cloud_target.cols(); i++)
 	{
 		double maxdist = 100.0;
@@ -148,6 +148,8 @@ void icp(const PointCloudT::Ptr cloud_target,
 	int i = 1;
 	Eigen::MatrixXd ConP = P;
 	Eigen::MatrixXd ConQ = Q;
+	pcl::console::TicToc time;
+	time.tic();
 	while(i<Iter.Maxiterate)
 	{
 		//1.寻找P中点在Q中距离最近的点
@@ -162,6 +164,7 @@ void icp(const PointCloudT::Ptr cloud_target,
 			break;
 		}
 		i++;
+		std::cout << "一次迭代的时间 " << time.toc() << " ms" << std::endl;
 	}
 	//transformation_matrix = Transform(P, Q);
 	transformation_matrix = GetTransform(P,ConP);

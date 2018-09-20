@@ -22,3 +22,4 @@ using Eigen::Map;
 void icp(const Eigen::MatrixXd cloud_target,
 	const Eigen::MatrixXd cloud_source,
 	const Iter_para Iter, Eigen::Matrix4d &transformation_matrix);
+void Getinfo();

@@ -4,12 +4,11 @@
 #include "header.h"  
 
 
-
-
 void cudaFindNearest(int numBlocks, int threadsPerBlock, double *P, double *Q, int nP, int nQ, double *Q_select, int *min_index_device);
 __global__ void kernelIterativeClosestPoint(double *P, double *Q, int nP, int nQ, int pointsPerThread, double *Q_select_device,int *min_index_device);
 Eigen::Matrix4d GetTransform(double *Pselect, double *Qselect, int);
 void Transform(double *P, const Eigen::MatrixXd Transmatrix, int , double *);
+
 
 // Catch the cuda error
 #ifdef DEBUG
@@ -38,7 +37,6 @@ void icp(Eigen::MatrixXd cloud_target,
 	Eigen::MatrixXd cloud_source,
 	const Iter_para Iter, Eigen::Matrix4d &transformation_matrix)
 {
-
 
 	//1.寻找P中点在Q中距离最近的点
 	int nP = cloud_target.cols();
@@ -71,8 +69,8 @@ void icp(Eigen::MatrixXd cloud_target,
 	cudaMemcpy(Q_device, Q_host, q_size, cudaMemcpyHostToDevice);
 
 	/* set cuda block*/
-	int numBlocks = 128;
-	int threadsPerBlock = 128;
+	int numBlocks = 32;
+	int threadsPerBlock =64;
 
 	int i = 1;
 	while (i < Iter.Maxiterate)
@@ -84,8 +82,8 @@ void icp(Eigen::MatrixXd cloud_target,
 		/* Find cloest poiny in cloudsource*/
 		cudaFindNearest(numBlocks, threadsPerBlock, P_device, Q_device, nP, nQ, Q_selectdevice, min_index_device);
 		/* copy the Q_select*/
-		cudaMemcpy(Q_select, Q_selectdevice, p_size, cudaMemcpyDeviceToHost);
-
+		cudaError_t status = cudaMemcpy(Q_select, Q_selectdevice, p_size, cudaMemcpyDeviceToHost);
+		if (status == cudaSuccess) { printf("有效"); }
 		//cpu
 		//2.求解对应的刚体变换
 		transformation_matrix = GetTransform(P_host, Q_select, nP);
@@ -236,4 +234,28 @@ void Transform(double *P, const Eigen::MatrixXd Transmatrix,int nsize, double *n
 __global__ void kernelTransform()
 {
 	int idx = threadIdx.x + blockIdx.x * blockDim.x;
+}
+
+void Getinfo()
+{
+	cudaDeviceProp prop;
+
+	int count;
+	cudaGetDeviceCount(&count);
+	printf("显卡所支持的cuda处理器数量：%d\n", count);
+	for (int i = 0; i < count; ++i) {
+		cudaGetDeviceProperties(&prop, i);
+		printf("----第%d个处理器的基本信息----\n", i + 1);
+		printf("处理器名称：%s \n", prop.name);
+		printf("计算能力：%d.%d\n", prop.major, prop.minor);
+		printf("设备上全局内存总量：%dMB\n", prop.totalGlobalMem / 1024 / 1024);
+		printf("设备上常量内存总量：%dKB\n", prop.totalConstMem / 1024);
+		printf("一个线程块中可使用的最大共享内存：%dKB\n", prop.sharedMemPerBlock / 1024);
+		printf("一个线程束包含的线程数量：%d\n", prop.warpSize);
+		printf("一个线程块中可包含的最大线程数量：%d\n", prop.maxThreadsPerBlock);
+		printf("多维线程块数组中每一维可包含的最大线程数量：(%d,%d,%d)\n", prop.maxThreadsDim[0],
+			prop.maxThreadsDim[1], prop.maxThreadsDim[2]);
+		printf("一个线程格中每一维可包含的最大线程块数量：(%d,%d,%d)\n", prop.maxGridSize[0],
+			prop.maxGridSize[1], prop.maxGridSize[2]);
+	}
 }

@@ -77,7 +77,8 @@ void main()
 	
 	//icp algorithm
 	Eigen::Matrix4d matrix_icp;
-	Iter_para iter{ N,10,0.001,0.8 };//迭代参数
+	Iter_para iter{ N,20,0.001,0.8 };//迭代参数
+	Getinfo();
 	long begin = clock();//存开始时间    
 	icp(cloud_in, cloud_icp, iter, matrix_icp);
 	std::cout << "GPU运行时间为: " << int(((double)(clock() - begin)) / CLOCKS_PER_SEC * 1000) << "ms " << std::endl;
